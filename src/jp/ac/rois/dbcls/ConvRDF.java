@@ -1,0 +1,83 @@
+/*
+ * This code is derived from arq.examples.riot.ExRIOT_6, which is 
+ * distributed under the Apache License, Version 2.0.
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Database Center for Life Science (DBCLS) has developed this code
+ * and releases it under MIT style license. 
+ */
+
+package jp.ac.rois.dbcls;
+
+import java.io.File;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFFormat;
+import org.apache.jena.riot.RDFLanguages;
+import org.apache.jena.riot.RiotNotFoundException;
+import org.apache.jena.riot.lang.PipedRDFIterator;
+import org.apache.jena.riot.lang.PipedRDFStream;
+import org.apache.jena.riot.lang.PipedTriplesStream;
+
+import com.hp.hpl.jena.graph.Factory;
+import com.hp.hpl.jena.graph.Graph;
+import com.hp.hpl.jena.graph.Triple;
+
+public class ConvRDF {
+
+	public static void main(String[] args) {
+		final int interval = 10000;
+		final int buffersize = 100000;
+		if(args.length == 0){
+			System.out.println("Please specify the filename to be converted.");
+			return;
+		} else {
+			File file = new File(args[0]);
+			if(!file.exists() || !file.canRead()){
+				System.out.println("Can't read " + file);
+				return;
+			}
+		}
+		final String filename = args[0];
+
+        PipedRDFIterator<Triple> iter = new PipedRDFIterator<Triple>(buffersize);
+        final PipedRDFStream<Triple> inputStream = new PipedTriplesStream(iter);
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+
+        Runnable parser = new Runnable() {
+
+            @Override    
+            public void run() {
+            	try{
+            		RDFDataMgr.parse(inputStream, filename, "file:///", RDFLanguages.RDFXML, null);
+            	}
+            	catch (RiotNotFoundException e){
+            		System.err.println("File format error.");
+            	}
+            }
+        };
+
+        executor.submit(parser);
+
+        int i = 0;
+        Graph g = Factory.createDefaultGraph();
+        while (iter.hasNext()) {
+        	Triple next = iter.next();
+        	g.add(next);
+        	i++;
+        	if(i % interval == 0){
+        		RDFDataMgr.write(System.out, g, RDFFormat.NTRIPLES_UTF8);
+        		g = Factory.createDefaultGraph();
+        	}
+        }
+        if(i % interval > 0){
+        	RDFDataMgr.write(System.out, g, RDFFormat.NTRIPLES_UTF8);
+        }
+
+        executor.shutdown();
+    }
+
+}
