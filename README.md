@@ -6,8 +6,9 @@ This tool requires Apache Jena libraries. We tested it on the version 2.13.0.
 
 This tool can be used as follows:
 
-$ java -jar ConvRDF.jar &lt;file to be converted&gt;
+```$ java -jar ConvRDF.jar &lt;file to be converted&gt;```
 
+A gziped file can be processed properly.
 If you want to specify a format, use the -i:&lt;format&gt; option just before the filename, where &lt;format&gt; is either rdfxml or turtle.
 
 NOTICE: This tool uses Apache Jena libraries, which are released under the Apache License Version 2.0.

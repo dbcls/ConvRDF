@@ -33,6 +33,7 @@ public class ConvRDF {
 	public static void main(String[] args) {
 
 		final Map<String, Lang> optmap = new HashMap<String, Lang>() {
+			private static final long serialVersionUID = 1L;
 			{put("turtle", RDFLanguages.TURTLE);}
             {put("rdfxml", RDFLanguages.RDFXML);}
         };
@@ -73,13 +74,6 @@ public class ConvRDF {
 			public void run() {
 				try{
 					RDFDataMgr.parse(inputStream, filename, "file:///", inputformat, null);
-					/*
-					if(inputformat.equals("turtle")){
-						RDFDataMgr.parse(inputStream, filename, "file:///", RDFLanguages.TURTLE, null);
-					} else if(inputformat.equals("rdfxml")){
-						RDFDataMgr.parse(inputStream, filename, "file:///", RDFLanguages.RDFXML, null);
-					}
-					*/
 				}
 				catch (RiotNotFoundException e){
 					System.err.println("File format error.");
