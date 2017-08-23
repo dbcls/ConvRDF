@@ -34,8 +34,9 @@ public class ConvRDF {
 
 		final Map<String, Lang> optmap = new HashMap<String, Lang>() {
 			private static final long serialVersionUID = 1L;
-			{put("turtle", RDFLanguages.TURTLE);}
             {put("rdfxml", RDFLanguages.RDFXML);}
+			{put("turtle", RDFLanguages.TURTLE);}
+            {put("jsonld", RDFLanguages.JSONLD);}
         };
 
 		final int interval = 10000;
@@ -57,7 +58,7 @@ public class ConvRDF {
 			}
 		}
 		if(!optmap.containsKey(informat)){
-			System.out.println("Input format is either turtle or rdfxml.");
+			System.out.println("Input format is either jsonld, turtle, or rdfxml.");
 			return;
 		}
 		final String filename = args[idx];
