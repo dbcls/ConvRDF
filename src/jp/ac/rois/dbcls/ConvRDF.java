@@ -10,61 +10,41 @@
 package jp.ac.rois.dbcls;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFParser;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
-import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.riot.RiotNotFoundException;
 import org.apache.jena.riot.lang.PipedRDFIterator;
 import org.apache.jena.riot.lang.PipedRDFStream;
 import org.apache.jena.riot.lang.PipedTriplesStream;
-
-import com.hp.hpl.jena.graph.Factory;
-import com.hp.hpl.jena.graph.Graph;
-import com.hp.hpl.jena.graph.Triple;
+import org.apache.jena.graph.Triple;
+import org.apache.jena.graph.Graph;
+import org.apache.jena.graph.Factory;
 
 public class ConvRDF {
 
 	public static void main(String[] args) {
 
-		final Map<String, Lang> optmap = new HashMap<String, Lang>() {
-			private static final long serialVersionUID = 1L;
-            {put("rdfxml", RDFLanguages.RDFXML);}
-			{put("turtle", RDFLanguages.TURTLE);}
-            {put("jsonld", RDFLanguages.JSONLD);}
-        };
-
 		final int interval = 10000;
 		final int buffersize = 100000;
-		String informat = "rdfxml";
 		int idx = 0;
 		if(args.length == 0){
 			System.out.println("Please specify the filename to be converted.");
 			return;
 		} else {
-			if(args[idx].startsWith("-i:")){
-				informat = args[idx].substring(3);
-				idx++;
-			}
 			File file = new File(args[idx]);
 			if(!file.exists() || !file.canRead()){
 				System.out.println("Can't read " + file);
 				return;
 			}
 		}
-		if(!optmap.containsKey(informat)){
-			System.out.println("Input format is either jsonld, turtle, or rdfxml.");
-			return;
-		}
-		final String filename = args[idx];
-		final Lang inputformat = optmap.get(informat);
 
-		PipedRDFIterator<Triple> iter = new PipedRDFIterator<Triple>(buffersize);
+		final String filename = args[idx];
+
+		PipedRDFIterator<Triple> iter = new PipedRDFIterator<Triple>(buffersize, false, 300, 1000);
 		final PipedRDFStream<Triple> inputStream = new PipedTriplesStream(iter);
 
 		ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -74,7 +54,7 @@ public class ConvRDF {
 			@Override
 			public void run() {
 				try{
-					RDFDataMgr.parse(inputStream, filename, "file:///", inputformat, null);
+					RDFParser.source(filename).parse(inputStream);
 				}
 				catch (RiotNotFoundException e){
 					System.err.println("File format error.");
