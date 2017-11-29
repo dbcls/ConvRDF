@@ -26,23 +26,9 @@ import org.apache.jena.graph.Factory;
 
 public class ConvRDF {
 
-	public static void main(String[] args) {
-
+	private static void issuer(String filename){
 		final int interval = 10000;
 		final int buffersize = 100000;
-		int idx = 0;
-		if(args.length == 0){
-			System.out.println("Please specify the filename to be converted.");
-			return;
-		} else {
-			File file = new File(args[idx]);
-			if(!file.exists() || !file.canRead()){
-				System.out.println("Can't read " + file);
-				return;
-			}
-		}
-
-		final String filename = args[idx];
 
 		PipedRDFIterator<Triple> iter = new PipedRDFIterator<Triple>(buffersize, false, 300, 1000);
 		final PipedRDFStream<Triple> inputStream = new PipedTriplesStream(iter);
@@ -80,6 +66,32 @@ public class ConvRDF {
 		}
 
 		executor.shutdown();
+	}
+
+	public static void main(String[] args) {
+
+		int idx = 0;
+		if(args.length == 0){
+			System.out.println("Please specify the filename to be converted.");
+			return;
+		} else {
+			File file = new File(args[idx]);
+			if(!file.exists() || !file.canRead()){
+				System.out.println("Can't read " + file);
+				return;
+			}
+			if(file.isFile()){
+				issuer(args[idx]);
+			}else if(file.isDirectory()){
+				File[] fileList = file.listFiles();
+				for (File f: fileList){
+					if(f.getName().startsWith("."))
+						continue;
+					issuer(f.getPath());
+				}
+			}
+		}
+
 	}
 
 }
