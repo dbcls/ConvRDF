@@ -29,7 +29,7 @@ public class ConvRDF {
 	public static void main(String[] args) {
 
 		final int interval = 10000;
-		final int buffersize = 100000;
+		final int buffersize = 1000000;
 		int idx = 0;
 		if(args.length == 0){
 			System.out.println("Please specify the filename to be converted.");
@@ -44,7 +44,7 @@ public class ConvRDF {
 
 		final String filename = args[idx];
 
-		PipedRDFIterator<Triple> iter = new PipedRDFIterator<Triple>(buffersize, false, 300, 1000);
+		PipedRDFIterator<Triple> iter = new PipedRDFIterator<Triple>(buffersize, false, 3000, 5000);
 		final PipedRDFStream<Triple> inputStream = new PipedTriplesStream(iter);
 
 		ExecutorService executor = Executors.newSingleThreadExecutor();
