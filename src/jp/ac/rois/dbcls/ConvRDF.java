@@ -51,13 +51,13 @@ public class ConvRDF {
 				.build();
 				try{
 					parser_object.parse(inputStream);
-					//RDFParser.source(filename).parse(inputStream);
 				}
 				catch (RiotParseException e){
-					System.err.println("Parse error: " + e.getMessage());
+					System.err.println("Parse error [" + filename + "]: " + e.getMessage());
+					return;
 				}
 				catch (RiotNotFoundException e){
-					System.err.println("File format error: " + e.getMessage());
+					System.err.println("File format error [" + filename + "]: " + e.getMessage());
 				}
 			}
 		};
