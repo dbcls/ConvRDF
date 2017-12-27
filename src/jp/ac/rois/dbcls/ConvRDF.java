@@ -14,6 +14,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.jena.riot.RDFParser;
+import org.apache.jena.riot.RDFParserBuilder;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
 import org.apache.jena.riot.RiotNotFoundException;
@@ -39,8 +40,10 @@ public class ConvRDF {
 
 			@Override
 			public void run() {
+				RDFParser parser_object = RDFParserBuilder.create().source(filename).checking(true).build();
 				try{
-					RDFParser.source(filename).parse(inputStream);
+					parser_object.parse(inputStream);
+					//RDFParser.source(filename).parse(inputStream);
 				}
 				catch (RiotNotFoundException e){
 					System.err.println("File format error.");
