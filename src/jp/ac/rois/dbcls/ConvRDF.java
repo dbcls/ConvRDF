@@ -19,9 +19,11 @@ import org.apache.jena.riot.RiotException;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
 import org.apache.jena.riot.RiotNotFoundException;
+import org.apache.jena.riot.RiotParseException;
 import org.apache.jena.riot.lang.PipedRDFIterator;
 import org.apache.jena.riot.lang.PipedRDFStream;
 import org.apache.jena.riot.lang.PipedTriplesStream;
+import org.apache.jena.riot.system.ErrorHandlerFactory;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.graph.Factory;
@@ -41,10 +43,18 @@ public class ConvRDF {
 
 			@Override
 			public void run() {
-				RDFParser parser_object = RDFParserBuilder.create().source(filename).checking(true).build();
+				RDFParser parser_object = RDFParserBuilder
+				.create()
+				.errorHandler(ErrorHandlerFactory.errorHandlerDetailed())
+				.source(filename)
+				.checking(true)
+				.build();
 				try{
 					parser_object.parse(inputStream);
 					//RDFParser.source(filename).parse(inputStream);
+				}
+				catch (RiotParseException e){
+					System.err.println("Parse error: " + e.getMessage());
 				}
 				catch (RiotNotFoundException e){
 					System.err.println("File format error: " + e.getMessage());
