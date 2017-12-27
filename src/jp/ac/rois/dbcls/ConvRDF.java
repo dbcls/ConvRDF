@@ -15,6 +15,7 @@ import java.util.concurrent.Executors;
 
 import org.apache.jena.riot.RDFParser;
 import org.apache.jena.riot.RDFParserBuilder;
+import org.apache.jena.riot.RiotException;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
 import org.apache.jena.riot.RiotNotFoundException;
@@ -46,7 +47,7 @@ public class ConvRDF {
 					//RDFParser.source(filename).parse(inputStream);
 				}
 				catch (RiotNotFoundException e){
-					System.err.println("File format error.");
+					System.err.println("File format error: " + e.getMessage());
 				}
 			}
 		};
@@ -55,17 +56,22 @@ public class ConvRDF {
 
 		int i = 0;
 		Graph g = Factory.createDefaultGraph();
-		while (iter.hasNext()) {
-			Triple next = iter.next();
-			g.add(next);
-			i++;
-			if(i % interval == 0){
+		try{
+			while (iter.hasNext()) {
+				Triple next = iter.next();
+				g.add(next);
+				i++;
+				if(i % interval == 0){
+					RDFDataMgr.write(System.out, g, RDFFormat.NTRIPLES_UTF8);
+					g = Factory.createDefaultGraph();
+				}
+			}
+			if(i % interval > 0){
 				RDFDataMgr.write(System.out, g, RDFFormat.NTRIPLES_UTF8);
-				g = Factory.createDefaultGraph();
 			}
 		}
-		if(i % interval > 0){
-			RDFDataMgr.write(System.out, g, RDFFormat.NTRIPLES_UTF8);
+		catch (RiotException e){
+			System.err.println("Riot Exception: " + e.getMessage());
 		}
 
 		executor.shutdown();
