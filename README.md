@@ -1,3 +1,5 @@
+#ConvRDF
+
 Converts a file in some RDF formats such as RDF/XML, JSON-LD, Turtle to it in N-Triples.
 
 ConvRDF converts a file in a streaming fashion, so that it can handle huge numbers of triples (> 1 billion) without consuming a huge amount of memory.
@@ -10,4 +12,4 @@ This tool can be used as follows:
 
 Gziped files can be processed properly.
 
-NOTICE: This tool uses Apache Jena libraries, which are released under the Apache License Version 2.0.
+__NOTICE__: This tool uses [Apache Jena](http://jena.apache.org/) libraries, which are released under the Apache License Version 2.0.
