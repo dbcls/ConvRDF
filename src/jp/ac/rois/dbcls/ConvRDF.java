@@ -26,9 +26,12 @@ import org.apache.jena.riot.lang.PipedTriplesStream;
 import org.apache.jena.riot.system.ErrorHandlerFactory;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.graph.Graph;
+import org.apache.jena.atlas.logging.LogCtl;
 import org.apache.jena.graph.Factory;
 
 public class ConvRDF {
+
+	static { LogCtl.setCmdLogging(); }
 
 	private static void issuer(String filename){
 		final int interval = 10000;
