@@ -54,10 +54,11 @@ public class ConvRDF {
 				}
 				catch (RiotParseException e){
 					System.err.println("Parse error [" + filename + "]: " + e.getMessage());
-					return;
+					inputStream.finish();
 				}
 				catch (RiotNotFoundException e){
 					System.err.println("File format error [" + filename + "]: " + e.getMessage());
+					inputStream.finish();
 				}
 			}
 		};
