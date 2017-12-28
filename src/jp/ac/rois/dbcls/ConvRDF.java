@@ -56,14 +56,15 @@ public class ConvRDF {
 					parser_object.parse(inputStream);
 				}
 				catch (RiotParseException e){
-					System.err.println("Parse error at the line: "
-							+ e.getLine()
-							+ " and the column: "
-							+ e.getCol()
+					String location = "";
+					if(e.getLine() >= 0 && e.getCol() >= 0)
+						location = " at the line: " + e.getLine() + " and the column: " + e.getCol();
+					System.err.println("Parse error"
+							+ location
 							+ " in \""
 							+ filename
-							+ "\", and cannot parse this file anymore. Reason:"
-							+ e.getMessage() + "(" + e.getOriginalMessage() +")");
+							+ "\", and cannot parse this file anymore. Reason: "
+							+ e.getMessage());
 					inputStream.finish();
 				}
 				catch (RiotNotFoundException e){
