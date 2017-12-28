@@ -56,11 +56,18 @@ public class ConvRDF {
 					parser_object.parse(inputStream);
 				}
 				catch (RiotParseException e){
-					System.err.println("Parse error [" + filename + "]: " + e.getMessage());
+					System.err.println("Parse error at the line: "
+							+ e.getLine()
+							+ " and the column: "
+							+ e.getCol()
+							+ " in \""
+							+ filename
+							+ "\", and cannot parse this file anymore. Reason:"
+							+ e.getMessage() + "(" + e.getOriginalMessage() +")");
 					inputStream.finish();
 				}
 				catch (RiotNotFoundException e){
-					System.err.println("File format error [" + filename + "]: " + e.getMessage());
+					System.err.println("Format error for the file \"" + filename + "\": " + e.getMessage());
 					inputStream.finish();
 				}
 			}
