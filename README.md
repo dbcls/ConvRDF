@@ -1,4 +1,4 @@
-#Å@ConvRDF
+# ConvRDF
 
 Converts a file in some RDF formats such as RDF/XML, JSON-LD, Turtle to it in N-Triples.
 
