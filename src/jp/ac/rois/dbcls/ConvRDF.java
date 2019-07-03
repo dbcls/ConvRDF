@@ -36,14 +36,15 @@ public class ConvRDF {
 	private static void issuer(String filename){
 		final int interval = 10000;
 		final int buffersize = 100000;
+		final int pollTimeout = 300; // Poll timeout in milliseconds
+		final int maxPolls = 1000;   // Max poll attempts
 
-		PipedRDFIterator<Triple> iter = new PipedRDFIterator<Triple>(buffersize, false, 300, 1000);
+		PipedRDFIterator<Triple> iter = new PipedRDFIterator<Triple>(buffersize, false, pollTimeout, maxPolls);
 		final PipedRDFStream<Triple> inputStream = new PipedTriplesStream(iter);
 
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 
 		Runnable parser = new Runnable() {
-
 			@Override
 			public void run() {
 				RDFParser parser_object = RDFParserBuilder
@@ -73,7 +74,6 @@ public class ConvRDF {
 				}
 			}
 		};
-
 		executor.submit(parser);
 
 		int i = 0;
@@ -95,7 +95,6 @@ public class ConvRDF {
 		catch (RiotException e){
 			System.err.println("Riot Exception: " + e.getMessage());
 		}
-
 		executor.shutdown();
 	}
 
