@@ -41,8 +41,10 @@ import org.apache.jena.riot.RDFLanguages;
 public class ConvRDF {
 
 	static { LogCtl.setCmdLogging(); }
+	static boolean recursive;
 
 	private static void issuer(BufferedInputStream reader, Lang lang) {
+		if(lang == null) return;
 		final int interval = 10000;
 		final int buffersize = 100000;
 		final int pollTimeout = 300; // Poll timeout in milliseconds
@@ -110,6 +112,7 @@ public class ConvRDF {
 
 	private static void issuer(String filename){
 		Lang lang = RDFLanguages.filenameToLang(filename);
+		if (lang == null) return;
 		try {
 			BufferedInputStream bis = new BufferedInputStream(new FileInputStream(filename));
 			issuer(bis, lang);
@@ -125,13 +128,31 @@ public class ConvRDF {
 			BufferedInputStream bis = null;
 			while (currentEntry != null) {
 				Lang lang = RDFLanguages.filenameToLang(currentEntry.getName());
-				bis = new BufferedInputStream(tarInput);
-				issuer(bis, lang);
+				if(lang != null) {
+					bis = new BufferedInputStream(tarInput);
+					issuer(bis, lang);
+				}
 				currentEntry = tarInput.getNextTarEntry();
 			}
 			tarInput.close();
 		} catch (IOException e) {
 			System.err.println("Something wrong in processing a tar file:" + e.getMessage());
+		}
+	}
+
+	private static void processRecursively(File file) {
+		File[] fileList = file.listFiles();
+		for (File f: fileList){
+			if(f.getName().startsWith("."))
+				continue;
+			if (f.isDirectory() && recursive) {
+				processRecursively(f);
+			}
+			if( f.getName().endsWith(".tar.gz") || f.getName().endsWith(".taz") ) {
+				procTarGz(f.getPath());
+			} else {
+				issuer(f.getPath());
+			}
 		}
 	}
 	
@@ -141,30 +162,27 @@ public class ConvRDF {
 		if(args.length == 0){
 			System.out.println("Please specify the filename to be converted.");
 			return;
-		} else {
-			File file = new File(args[idx]);
-			if(!file.exists() || !file.canRead()){
-				System.out.println("Can't read " + file);
-				return;
+		}
+		recursive = false;
+		while (args[idx].startsWith("-")) {
+			if(args[idx].equals("-r")) {
+				recursive = true;				
 			}
-			if(file.isFile()){
-				if( file.getName().endsWith(".tar.gz") || file.getName().endsWith(".taz") ) {
-					procTarGz(args[idx]);
-				}else {
-					issuer(args[idx]);
-				}
-			}else if(file.isDirectory()){
-				File[] fileList = file.listFiles();
-				for (File f: fileList){
-					if(f.getName().startsWith("."))
-						continue;
-					if( f.getName().endsWith(".tar.gz") || f.getName().endsWith(".taz") ) {
-						procTarGz(f.getPath());
-					}else {
-						issuer(f.getPath());
-					}
-				}
+			idx++;
+		}
+		File file = new File(args[idx]);
+		if(!file.exists() || !file.canRead()){
+			System.out.println("Can't read " + file);
+			return;
+		}
+		if(file.isFile()){
+			if( file.getName().endsWith(".tar.gz") || file.getName().endsWith(".taz") ) {
+				procTarGz(args[idx]);
+			}else {
+				issuer(args[idx]);
 			}
+		}else if(file.isDirectory()){
+			processRecursively(file);
 		}
 
 	}
