@@ -12,7 +12,6 @@ package jp.ac.rois.dbcls;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -114,9 +113,14 @@ public class ConvRDF {
 		Lang lang = RDFLanguages.filenameToLang(filename);
 		if (lang == null) return;
 		try {
-			BufferedInputStream bis = new BufferedInputStream(new FileInputStream(filename));
+			BufferedInputStream bis;
+			if(filename.endsWith(".gz")) {
+				bis = new BufferedInputStream(new GzipCompressorInputStream(new FileInputStream(filename)));
+			} else {
+				bis = new BufferedInputStream(new FileInputStream(filename));				
+			}
 			issuer(bis, lang);
-		} catch (FileNotFoundException e) {
+		} catch (IOException e) {
 			System.err.println("File not found:" + e.getMessage());
 		}	
 	}
