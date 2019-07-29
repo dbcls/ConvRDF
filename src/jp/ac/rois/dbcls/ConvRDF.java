@@ -114,16 +114,15 @@ public class ConvRDF {
 			BufferedInputStream bis = new BufferedInputStream(new FileInputStream(filename));
 			issuer(bis, lang);
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			System.err.println("File not found:" + e.getMessage());
 		}	
 	}
 
 	private static void procTarGz(String file) throws IOException {
-		TarArchiveInputStream tarInput = new TarArchiveInputStream (new GzipCompressorInputStream (new FileInputStream(file)));
+		TarArchiveInputStream tarInput = new TarArchiveInputStream(new GzipCompressorInputStream(new FileInputStream(file)));
 		TarArchiveEntry currentEntry = tarInput.getNextTarEntry();
 		BufferedInputStream bis = null;
 		while (currentEntry != null) {
-		    System.out.println("For File = " + currentEntry.getName());
 		    Lang lang = RDFLanguages.filenameToLang(currentEntry.getName());
 		    bis = new BufferedInputStream(tarInput);
 		    issuer(bis, lang);
@@ -145,11 +144,11 @@ public class ConvRDF {
 				return;
 			}
 			if(file.isFile()){
-				if( file.getName().endsWith(".tar.gz") ) {
+				if( file.getName().endsWith(".tar.gz") || file.getName().endsWith(".taz") ) {
 					try {
 						procTarGz(args[idx]);
 					} catch (IOException e) {
-						e.printStackTrace();
+						System.err.println("Something wrong in processing a tar file:" + e.getMessage());
 					}
 				}else {
 					issuer(args[idx]);
