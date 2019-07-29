@@ -159,16 +159,16 @@ public class ConvRDF {
 	public static void main(String[] args) {
 
 		int idx = 0;
-		if(args.length == 0){
-			System.out.println("Please specify the filename to be converted.");
-			return;
-		}
 		recursive = false;
-		while (args[idx].startsWith("-")) {
+		while (idx < args.length && args[idx].startsWith("-")) {
 			if(args[idx].equals("-r")) {
 				recursive = true;				
 			}
 			idx++;
+		}
+		if(idx == args.length){
+			System.out.println("Please specify the filename to be converted.");
+			return;
 		}
 		File file = new File(args[idx]);
 		if(!file.exists() || !file.canRead()){
