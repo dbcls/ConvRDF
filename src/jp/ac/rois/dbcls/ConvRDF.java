@@ -20,6 +20,7 @@ import java.util.concurrent.Executors;
 import org.apache.jena.riot.RDFParser;
 import org.apache.jena.riot.RDFParserBuilder;
 import org.apache.jena.riot.RiotException;
+import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
 import org.apache.jena.riot.RiotNotFoundException;
@@ -35,12 +36,13 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.jena.atlas.logging.LogCtl;
 import org.apache.jena.graph.Factory;
+import org.apache.jena.riot.RDFLanguages;
 
 public class ConvRDF {
 
 	static { LogCtl.setCmdLogging(); }
 
-	private static void issuer(BufferedInputStream reader) {
+	private static void issuer(BufferedInputStream reader, Lang lang) {
 		final int interval = 10000;
 		final int buffersize = 100000;
 		final int pollTimeout = 300; // Poll timeout in milliseconds
@@ -59,6 +61,7 @@ public class ConvRDF {
 				.errorHandler(ErrorHandlerFactory.errorHandlerDetailed())
 				.source(reader)
 				.checking(true)
+				.lang(lang)
 				.build();
 				try{
 					parser_object.parse(inputStream);
@@ -106,9 +109,10 @@ public class ConvRDF {
 	}
 
 	private static void issuer(String filename){
+		Lang lang = RDFLanguages.filenameToLang(filename);
 		try {
 			BufferedInputStream bis = new BufferedInputStream(new FileInputStream(filename));
-			issuer(bis);
+			issuer(bis, lang);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}	
@@ -120,8 +124,9 @@ public class ConvRDF {
 		BufferedInputStream bis = null;
 		while (currentEntry != null) {
 		    System.out.println("For File = " + currentEntry.getName());
+		    Lang lang = RDFLanguages.filenameToLang(currentEntry.getName());
 		    bis = new BufferedInputStream(tarInput);
-		    issuer(bis);
+		    issuer(bis, lang);
 		    currentEntry = tarInput.getNextTarEntry();
 		}
 		tarInput.close();
