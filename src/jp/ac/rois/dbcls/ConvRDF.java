@@ -10,6 +10,8 @@
 package jp.ac.rois.dbcls;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -26,6 +28,9 @@ import org.apache.jena.riot.lang.PipedTriplesStream;
 import org.apache.jena.riot.system.ErrorHandlerFactory;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.graph.Graph;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.jena.atlas.logging.LogCtl;
 import org.apache.jena.graph.Factory;
 
@@ -98,6 +103,17 @@ public class ConvRDF {
 		executor.shutdown();
 	}
 
+	private static void procTarGz(String file) throws IOException {
+		TarArchiveInputStream tarInput = new TarArchiveInputStream (new GzipCompressorInputStream (new FileInputStream(file)));
+		TarArchiveEntry currentEntry = tarInput.getNextTarEntry();
+		while (currentEntry != null) {
+		    System.out.println("For File = " + currentEntry.getName());
+		    issuer(currentEntry.getName());
+		    currentEntry = tarInput.getNextTarEntry();
+		}
+		tarInput.close();
+	}
+	
 	public static void main(String[] args) {
 
 		int idx = 0;
@@ -111,7 +127,15 @@ public class ConvRDF {
 				return;
 			}
 			if(file.isFile()){
-				issuer(args[idx]);
+				if( file.getName().endsWith(".tar.gz") ) {
+					try {
+						procTarGz(args[idx]);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}else {
+					issuer(args[idx]);
+				}
 			}else if(file.isDirectory()){
 				File[] fileList = file.listFiles();
 				for (File f: fileList){
