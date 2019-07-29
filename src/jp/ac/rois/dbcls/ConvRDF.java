@@ -9,8 +9,10 @@
 
 package jp.ac.rois.dbcls;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -38,7 +40,7 @@ public class ConvRDF {
 
 	static { LogCtl.setCmdLogging(); }
 
-	private static void issuer(String filename){
+	private static void issuer(BufferedInputStream reader) {
 		final int interval = 10000;
 		final int buffersize = 100000;
 		final int pollTimeout = 300; // Poll timeout in milliseconds
@@ -55,7 +57,7 @@ public class ConvRDF {
 				RDFParser parser_object = RDFParserBuilder
 				.create()
 				.errorHandler(ErrorHandlerFactory.errorHandlerDetailed())
-				.source(filename)
+				.source(reader)
 				.checking(true)
 				.build();
 				try{
@@ -68,13 +70,13 @@ public class ConvRDF {
 					System.err.println("Parse error"
 							+ location
 							+ " in \""
-							+ filename
+							+ reader
 							+ "\", and cannot parse this file anymore. Reason: "
 							+ e.getMessage());
 					inputStream.finish();
 				}
 				catch (RiotNotFoundException e){
-					System.err.println("Format error for the file \"" + filename + "\": " + e.getMessage());
+					System.err.println("Format error for the file \"" + reader + "\": " + e.getMessage());
 					inputStream.finish();
 				}
 			}
@@ -103,12 +105,23 @@ public class ConvRDF {
 		executor.shutdown();
 	}
 
+	private static void issuer(String filename){
+		try {
+			BufferedInputStream bis = new BufferedInputStream(new FileInputStream(filename));
+			issuer(bis);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}	
+	}
+
 	private static void procTarGz(String file) throws IOException {
 		TarArchiveInputStream tarInput = new TarArchiveInputStream (new GzipCompressorInputStream (new FileInputStream(file)));
 		TarArchiveEntry currentEntry = tarInput.getNextTarEntry();
+		BufferedInputStream bis = null;
 		while (currentEntry != null) {
 		    System.out.println("For File = " + currentEntry.getName());
-		    issuer(currentEntry.getName());
+		    bis = new BufferedInputStream(tarInput);
+		    issuer(bis);
 		    currentEntry = tarInput.getNextTarEntry();
 		}
 		tarInput.close();
