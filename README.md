@@ -10,6 +10,6 @@ This tool can be used as follows:
 
 ```$ java -jar ConvRDF.jar <a file or a directory which contains files to be converted>```
 
-Gziped files can be processed properly.
+Gziped files including .tar.gz can be processed properly.
 
 __NOTICE__: This tool uses [Apache Jena](http://jena.apache.org/) libraries, which are released under the Apache License Version 2.0.
