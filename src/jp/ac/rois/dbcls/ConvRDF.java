@@ -169,15 +169,17 @@ public class ConvRDF {
 	private static void processRecursively(File file) throws FileNotFoundException, IOException {
 		File[] fileList = file.listFiles();
 		for (File f: fileList){
-			if(f.getName().startsWith("."))
-				continue;
-			if (f.isDirectory() && recursive) {
-				processRecursively(f);
-			}
-			if(f.getName().endsWith(".taz") ) {
-				procTar(new TarArchiveInputStream(new GzipCompressorInputStream(new FileInputStream(f.getPath()))));
-			} else {
-				issuer(f.getPath());
+			if (f.isFile()) {
+				if(f.getName().endsWith(".taz") ) {
+					procTar(new TarArchiveInputStream(new GzipCompressorInputStream(new FileInputStream(f.getPath()))));
+				} else {
+					issuer(f.getPath());
+				}
+			} else if (f.isDirectory()) {
+				if(f.getName().startsWith("."))
+					continue;
+				if (recursive)
+					processRecursively(f);
 			}
 		}
 	}
@@ -206,11 +208,9 @@ public class ConvRDF {
 				if( file.getName().endsWith(".taz") ) {
 					procTar(new TarArchiveInputStream(new GzipCompressorInputStream(new FileInputStream(args[idx]))));
 				} else {
-					System.out.println("File Issuer");
 					issuer(args[idx]);
 				}
 			} else if(file.isDirectory()){
-				System.out.println("File Directory");
 				processRecursively(file);
 			}
 		} catch (FileNotFoundException e) {
