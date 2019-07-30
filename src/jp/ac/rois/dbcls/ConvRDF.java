@@ -12,7 +12,9 @@ package jp.ac.rois.dbcls;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -32,7 +34,10 @@ import org.apache.jena.graph.Triple;
 import org.apache.jena.graph.Graph;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.jena.atlas.logging.LogCtl;
 import org.apache.jena.graph.Factory;
 import org.apache.jena.riot.RDFLanguages;
@@ -110,24 +115,38 @@ public class ConvRDF {
 	}
 
 	private static void issuer(String filename){
-		Lang lang = RDFLanguages.filenameToLang(filename);
-		if (lang == null) return;
 		try {
-			BufferedInputStream bis;
-			if(filename.endsWith(".gz")) {
-				bis = new BufferedInputStream(new GzipCompressorInputStream(new FileInputStream(filename)));
-			} else {
-				bis = new BufferedInputStream(new FileInputStream(filename));				
+			InputStream is = null;
+			FileInputStream fis = new FileInputStream(filename);
+			switch (FilenameUtils.getExtension(filename)) {
+			case "gz":
+				is = new GzipCompressorInputStream(fis);
+			case "xz":
+				is = new XZCompressorInputStream(fis);
+			case "bz2":
+				is = new BZip2CompressorInputStream(fis);
 			}
-			issuer(bis, lang);
+			if(is == null) {
+				Lang lang = RDFLanguages.filenameToLang(filename);
+				if (lang != null)
+					issuer(new BufferedInputStream(fis), lang);
+			} else {
+				filename = FilenameUtils.removeExtension(filename);
+				if(FilenameUtils.getExtension(filename) == "tar") {
+					procTar(new TarArchiveInputStream(is));
+				} else {
+					Lang lang = RDFLanguages.filenameToLang(filename);
+					if (lang != null)
+						issuer(new BufferedInputStream(is), lang);
+				}
+			}
 		} catch (IOException e) {
 			System.err.println("File not found:" + e.getMessage());
 		}	
 	}
 
-	private static void procTarGz(String file) {
+	private static void procTar(TarArchiveInputStream tarInput) {
 		try {
-			TarArchiveInputStream tarInput = new TarArchiveInputStream(new GzipCompressorInputStream(new FileInputStream(file)));
 			TarArchiveEntry currentEntry = tarInput.getNextTarEntry();
 			BufferedInputStream bis = null;
 			while (currentEntry != null) {
@@ -144,7 +163,7 @@ public class ConvRDF {
 		}
 	}
 
-	private static void processRecursively(File file) {
+	private static void processRecursively(File file) throws FileNotFoundException, IOException {
 		File[] fileList = file.listFiles();
 		for (File f: fileList){
 			if(f.getName().startsWith("."))
@@ -152,8 +171,8 @@ public class ConvRDF {
 			if (f.isDirectory() && recursive) {
 				processRecursively(f);
 			}
-			if( f.getName().endsWith(".tar.gz") || f.getName().endsWith(".taz") ) {
-				procTarGz(f.getPath());
+			if(f.getName().endsWith(".taz") ) {
+				procTar(new TarArchiveInputStream(new GzipCompressorInputStream(new FileInputStream(f.getPath()))));
 			} else {
 				issuer(f.getPath());
 			}
@@ -179,14 +198,20 @@ public class ConvRDF {
 			System.out.println("Can't read " + file);
 			return;
 		}
-		if(file.isFile()){
-			if( file.getName().endsWith(".tar.gz") || file.getName().endsWith(".taz") ) {
-				procTarGz(args[idx]);
-			}else {
-				issuer(args[idx]);
+		try {
+			if(file.isFile()){
+				if( file.getName().endsWith(".taz") ) {
+					procTar(new TarArchiveInputStream(new GzipCompressorInputStream(new FileInputStream(args[idx]))));
+				} else {
+					issuer(args[idx]);
+				}
+			} else if(file.isDirectory()){
+				processRecursively(file);
 			}
-		}else if(file.isDirectory()){
-			processRecursively(file);
+		} catch (FileNotFoundException e) {
+			System.err.println("File not found:" + e.getMessage());
+		} catch (IOException e) {
+			System.err.println("IO Exception:" + e.getMessage());
 		}
 
 	}
