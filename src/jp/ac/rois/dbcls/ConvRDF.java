@@ -121,10 +121,13 @@ public class ConvRDF {
 			switch (FilenameUtils.getExtension(filename)) {
 			case "gz":
 				is = new GzipCompressorInputStream(fis);
+				break;
 //			case "xz":
 //				is = new XZCompressorInputStream(fis);
+//				break;
 			case "bz2":
 				is = new BZip2CompressorInputStream(fis);
+				break;
 			}
 			if(is == null) {
 				Lang lang = RDFLanguages.filenameToLang(filename);
