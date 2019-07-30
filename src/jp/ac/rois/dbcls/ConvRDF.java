@@ -206,9 +206,11 @@ public class ConvRDF {
 				if( file.getName().endsWith(".taz") ) {
 					procTar(new TarArchiveInputStream(new GzipCompressorInputStream(new FileInputStream(args[idx]))));
 				} else {
+					System.out.println("File Issuer");
 					issuer(args[idx]);
 				}
 			} else if(file.isDirectory()){
+				System.out.println("File Directory");
 				processRecursively(file);
 			}
 		} catch (FileNotFoundException e) {
