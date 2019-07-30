@@ -139,7 +139,7 @@ public class ConvRDF {
 				System.err.println("Ext:" + FilenameUtils.getExtension(filename));
 				if(FilenameUtils.getExtension(filename).equals("tar")) {
 					System.err.println("procTar:" + filename);
-					procTar(new TarArchiveInputStream(is));
+					procTar(is);
 				} else {
 					Lang lang = RDFLanguages.filenameToLang(filename);
 					System.err.println("Issuer(2):" + filename);
@@ -152,15 +152,16 @@ public class ConvRDF {
 		}	
 	}
 
-	private static void procTar(TarArchiveInputStream tarInput) {
+	private static void procTar(InputStream is) {
 		try {
+			TarArchiveInputStream tarInput = new TarArchiveInputStream(is);
 			TarArchiveEntry currentEntry = tarInput.getNextTarEntry();
 			BufferedInputStream bis = null;
 			while (currentEntry != null) {
 				System.err.println(">" + currentEntry.getName());
 				Lang lang = RDFLanguages.filenameToLang(currentEntry.getName());
 				if(lang != null) {
-					System.err.println("Lang:" + lang);
+					System.err.println(lang);
 					bis = new BufferedInputStream(tarInput);
 					issuer(bis, lang);
 				}
@@ -176,8 +177,8 @@ public class ConvRDF {
 		File[] fileList = file.listFiles();
 		for (File f: fileList){
 			if (f.isFile()) {
-				if(f.getName().endsWith(".taz") ) {
-					procTar(new TarArchiveInputStream(new GzipCompressorInputStream(new FileInputStream(f.getPath()))));
+				if(f.getName().endsWith(".taz")) {
+					procTar(new GzipCompressorInputStream(new FileInputStream(f.getPath())));
 				} else {
 					issuer(f.getPath());
 				}
