@@ -160,6 +160,7 @@ public class ConvRDF {
 				System.err.println(">" + currentEntry.getName());
 				Lang lang = RDFLanguages.filenameToLang(currentEntry.getName());
 				if(lang != null) {
+					System.err.println("Lang:" + lang);
 					bis = new BufferedInputStream(tarInput);
 					issuer(bis, lang);
 				}
