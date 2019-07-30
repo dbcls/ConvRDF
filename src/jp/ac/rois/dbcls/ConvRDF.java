@@ -136,7 +136,8 @@ public class ConvRDF {
 					issuer(new BufferedInputStream(fis), lang);
 			} else {
 				filename = FilenameUtils.removeExtension(filename);
-				if(FilenameUtils.getExtension(filename) == "tar") {
+				System.err.println("Ext:" + FilenameUtils.getExtension(filename));
+				if(FilenameUtils.getExtension(filename).equals("tar")) {
 					System.err.println("procTar:" + filename);
 					procTar(new TarArchiveInputStream(is));
 				} else {
