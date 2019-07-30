@@ -153,6 +153,7 @@ public class ConvRDF {
 			TarArchiveEntry currentEntry = tarInput.getNextTarEntry();
 			BufferedInputStream bis = null;
 			while (currentEntry != null) {
+				System.out.println(">" + currentEntry.getName());
 				Lang lang = RDFLanguages.filenameToLang(currentEntry.getName());
 				if(lang != null) {
 					bis = new BufferedInputStream(tarInput);
