@@ -36,7 +36,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
-import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
+//import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.jena.atlas.logging.LogCtl;
 import org.apache.jena.graph.Factory;
@@ -121,8 +121,8 @@ public class ConvRDF {
 			switch (FilenameUtils.getExtension(filename)) {
 			case "gz":
 				is = new GzipCompressorInputStream(fis);
-			case "xz":
-				is = new XZCompressorInputStream(fis);
+//			case "xz":
+//				is = new XZCompressorInputStream(fis);
 			case "bz2":
 				is = new BZip2CompressorInputStream(fis);
 			}
