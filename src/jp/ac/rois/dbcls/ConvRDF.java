@@ -116,6 +116,7 @@ public class ConvRDF {
 
 	private static void issuer(String filename){
 		try {
+			System.err.println("Issuer(1):" + filename);
 			InputStream is = null;
 			FileInputStream fis = new FileInputStream(filename);
 			switch (FilenameUtils.getExtension(filename)) {
@@ -136,9 +137,11 @@ public class ConvRDF {
 			} else {
 				filename = FilenameUtils.removeExtension(filename);
 				if(FilenameUtils.getExtension(filename) == "tar") {
+					System.err.println("procTar:" + filename);
 					procTar(new TarArchiveInputStream(is));
 				} else {
 					Lang lang = RDFLanguages.filenameToLang(filename);
+					System.err.println("Issuer(2):" + filename);
 					if (lang != null)
 						issuer(new BufferedInputStream(is), lang);
 				}
