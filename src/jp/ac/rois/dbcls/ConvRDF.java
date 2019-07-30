@@ -155,9 +155,9 @@ public class ConvRDF {
 	private static void procTar(InputStream is) {
 		try {
 			TarArchiveInputStream tarInput = new TarArchiveInputStream(is);
-			TarArchiveEntry currentEntry = tarInput.getNextTarEntry();
+			TarArchiveEntry currentEntry;
 			BufferedInputStream bis = null;
-			while (currentEntry != null) {
+			while ((currentEntry = tarInput.getNextTarEntry()) != null) {
 				System.err.println(">" + currentEntry.getName());
 				Lang lang = RDFLanguages.filenameToLang(currentEntry.getName());
 				if(lang != null) {
@@ -165,7 +165,6 @@ public class ConvRDF {
 					bis = new BufferedInputStream(tarInput);
 					issuer(bis, lang);
 				}
-				currentEntry = tarInput.getNextTarEntry();
 			}
 			tarInput.close();
 		} catch (IOException e) {
@@ -213,7 +212,7 @@ public class ConvRDF {
 		try {
 			if(file.isFile()){
 				if( file.getName().endsWith(".taz") ) {
-					procTar(new TarArchiveInputStream(new GzipCompressorInputStream(new FileInputStream(args[idx]))));
+					procTar(new GzipCompressorInputStream(new FileInputStream(args[idx])));
 				} else {
 					issuer(args[idx]);
 				}
