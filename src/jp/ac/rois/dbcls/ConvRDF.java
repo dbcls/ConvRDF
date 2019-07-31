@@ -9,12 +9,13 @@
 
 package jp.ac.rois.dbcls;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -36,9 +37,11 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
-//import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
 import org.apache.commons.io.FilenameUtils;
+//import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
+//import org.apache.commons.io.FilenameUtils;
 import org.apache.jena.atlas.logging.LogCtl;
+import org.apache.jena.ext.com.google.common.io.CharStreams;
 import org.apache.jena.graph.Factory;
 import org.apache.jena.riot.RDFLanguages;
 
@@ -47,8 +50,12 @@ public class ConvRDF {
 	static { LogCtl.setCmdLogging(); }
 	static boolean recursive;
 
-	private static void issuer(BufferedInputStream reader, Lang lang) {
-		if(lang == null) return;
+	private static void issuer(String file) {
+		issuer(file, null);
+	}
+
+	private static void issuer(Object reader, Lang lang) {
+		if(reader.getClass() == StringReader.class && lang == null) return;
 		final int interval = 10000;
 		final int buffersize = 100000;
 		final int pollTimeout = 300; // Poll timeout in milliseconds
@@ -62,13 +69,25 @@ public class ConvRDF {
 		Runnable parser = new Runnable() {
 			@Override
 			public void run() {
-				RDFParser parser_object = RDFParserBuilder
-				.create()
-				.errorHandler(ErrorHandlerFactory.errorHandlerDetailed())
-				.source(reader)
-				.checking(true)
-				.lang(lang)
-				.build();
+				RDFParser parser_object;
+				if(reader.getClass() == String.class) {
+					parser_object = RDFParserBuilder
+							.create()
+							.errorHandler(ErrorHandlerFactory.errorHandlerDetailed())
+							.source((String) reader)
+							.checking(true)
+							.build();					
+				}
+				else if (reader.getClass() == StringReader.class) {
+					parser_object = RDFParserBuilder
+							.create()
+							.errorHandler(ErrorHandlerFactory.errorHandlerDetailed())
+							.source((StringReader) reader)
+							.checking(true)
+							.lang(lang)
+							.build();
+				} else return;
+
 				try{
 					parser_object.parse(inputStream);
 				}
@@ -114,56 +133,45 @@ public class ConvRDF {
 		executor.shutdown();
 	}
 
-	private static void issuer(String filename){
+	private static void dispatch(String filename){
+		InputStream is = null;
 		try {
-			System.err.println("Issuer(1):" + filename);
-			InputStream is = null;
 			FileInputStream fis = new FileInputStream(filename);
 			switch (FilenameUtils.getExtension(filename)) {
 			case "gz":
 				is = new GzipCompressorInputStream(fis);
 				break;
-//			case "xz":
-//				is = new XZCompressorInputStream(fis);
-//				break;
-			case "bz2":
+			case "bz2": 
 				is = new BZip2CompressorInputStream(fis);
 				break;
+		//case "xz":
+		//	is = new XZCompressorInputStream(fis);
+		//	break;
+			default:
+				fis.close();
+				issuer(filename);
+				return;
 			}
-			if(is == null) {
-				Lang lang = RDFLanguages.filenameToLang(filename);
-				if (lang != null)
-					issuer(new BufferedInputStream(fis), lang);
+			if(FilenameUtils.getExtension(FilenameUtils.removeExtension(filename)).equals("tar")) {
+				procTar(is);
 			} else {
-				filename = FilenameUtils.removeExtension(filename);
-				System.err.println("Ext:" + FilenameUtils.getExtension(filename));
-				if(FilenameUtils.getExtension(filename).equals("tar")) {
-					System.err.println("procTar:" + filename);
-					procTar(is);
-				} else {
-					Lang lang = RDFLanguages.filenameToLang(filename);
-					System.err.println("Issuer(2):" + filename);
-					if (lang != null)
-						issuer(new BufferedInputStream(is), lang);
-				}
+				issuer(filename);
 			}
-		} catch (IOException e) {
+		} catch (FileNotFoundException e) {
 			System.err.println("File not found:" + e.getMessage());
-		}	
+		} catch (IOException e) {
+			System.err.println("IO Exception:" + e.getMessage());
+		}
 	}
 
-	private static void procTar(InputStream is) {
+	private static void procTar(InputStream ins) {
 		try {
-			TarArchiveInputStream tarInput = new TarArchiveInputStream(is);
+			TarArchiveInputStream tarInput = new TarArchiveInputStream(ins);
 			TarArchiveEntry currentEntry;
-			BufferedInputStream bis = null;
 			while ((currentEntry = tarInput.getNextTarEntry()) != null) {
-				System.err.println(">" + currentEntry.getName());
 				Lang lang = RDFLanguages.filenameToLang(currentEntry.getName());
 				if(lang != null) {
-					System.err.println(lang);
-					bis = new BufferedInputStream(tarInput);
-					issuer(bis, lang);
+					issuer(new StringReader(CharStreams.toString(new InputStreamReader(tarInput))), lang);
 				}
 			}
 			tarInput.close();
@@ -179,7 +187,7 @@ public class ConvRDF {
 				if(f.getName().endsWith(".taz")) {
 					procTar(new GzipCompressorInputStream(new FileInputStream(f.getPath())));
 				} else {
-					issuer(f.getPath());
+					dispatch(f.getPath());
 				}
 			} else if (f.isDirectory()) {
 				if(f.getName().startsWith("."))
@@ -214,7 +222,7 @@ public class ConvRDF {
 				if( file.getName().endsWith(".taz") ) {
 					procTar(new GzipCompressorInputStream(new FileInputStream(args[idx])));
 				} else {
-					issuer(args[idx]);
+					dispatch(args[idx]);
 				}
 			} else if(file.isDirectory()){
 				processRecursively(file);
