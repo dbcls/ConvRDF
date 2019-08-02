@@ -49,12 +49,13 @@ public class ConvRDF {
 
 	static { LogCtl.setCmdLogging(); }
 	static boolean recursive;
+	static boolean checking;
 
 	private static void issuer(String file) {
-		issuer(file, null);
+		issuer(file, null, checking);
 	}
 
-	private static void issuer(Object reader, Lang lang) {
+	private static void issuer(Object reader, Lang lang, boolean isCheck) {
 		if(reader.getClass() == StringReader.class && lang == null) return;
 		final int interval = 10000;
 		final int buffersize = 100000;
@@ -75,7 +76,7 @@ public class ConvRDF {
 							.create()
 							.errorHandler(ErrorHandlerFactory.errorHandlerDetailed())
 							.source((String) reader)
-							.checking(true)
+							.checking(isCheck)
 							.build();					
 				}
 				else if (reader.getClass() == StringReader.class) {
@@ -83,7 +84,7 @@ public class ConvRDF {
 							.create()
 							.errorHandler(ErrorHandlerFactory.errorHandlerDetailed())
 							.source((StringReader) reader)
-							.checking(true)
+							.checking(isCheck)
 							.lang(lang)
 							.build();
 				} else return;
@@ -171,7 +172,7 @@ public class ConvRDF {
 			while ((currentEntry = tarInput.getNextTarEntry()) != null) {
 				Lang lang = RDFLanguages.filenameToLang(currentEntry.getName());
 				if(lang != null) {
-					issuer(new StringReader(CharStreams.toString(new InputStreamReader(tarInput))), lang);
+					issuer(new StringReader(CharStreams.toString(new InputStreamReader(tarInput))), lang, checking);
 				}
 			}
 			tarInput.close();
@@ -202,9 +203,12 @@ public class ConvRDF {
 
 		int idx = 0;
 		recursive = false;
+		checking = false;
 		while (idx < args.length && args[idx].startsWith("-")) {
 			if(args[idx].equals("-r")) {
-				recursive = true;				
+				recursive = true;
+			} else if(args[idx].equals("-c")) {
+				checking = true;
 			}
 			idx++;
 		}
