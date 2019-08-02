@@ -52,6 +52,7 @@ public class ConvRDF {
 	static boolean checking;
 
 	private static void issuer(String file) {
+		System.err.println(file);
 		issuer(file, null, checking);
 	}
 
@@ -172,6 +173,7 @@ public class ConvRDF {
 			while ((currentEntry = tarInput.getNextTarEntry()) != null) {
 				Lang lang = RDFLanguages.filenameToLang(currentEntry.getName());
 				if(lang != null) {
+					System.err.println(currentEntry.getName());
 					issuer(new StringReader(CharStreams.toString(new InputStreamReader(tarInput))), lang, checking);
 				}
 			}
