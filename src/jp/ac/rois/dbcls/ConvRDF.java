@@ -57,6 +57,7 @@ public class ConvRDF {
 
 	private static void issuer(Object reader, Lang lang) {
 		if(reader.getClass() == StringReader.class && lang == null) return;
+		System.err.println(reader.getClass());
 		final int interval = 10000;
 		final int buffersize = 100000;
 		final int pollTimeout = 300; // Poll timeout in milliseconds
@@ -70,16 +71,18 @@ public class ConvRDF {
 		Runnable parser = new Runnable() {
 			@Override
 			public void run() {
-				RDFParser parser_object;
+				System.err.println("Begin.");
+				RDFParser parser_object = null;
 				if(reader.getClass() == String.class) {
+					System.err.println("String.");
 					parser_object = RDFParserBuilder
 							.create()
 							.errorHandler(ErrorHandlerFactory.errorHandlerDetailed())
 							.source((String) reader)
 							.checking(checking)
-							.build();					
-				}
-				else if (reader.getClass() == StringReader.class) {
+							.build();
+				} else if (reader.getClass() == StringReader.class) {
+					System.err.println("StringReader.");
 					parser_object = RDFParserBuilder
 							.create()
 							.errorHandler(ErrorHandlerFactory.errorHandlerDetailed())
@@ -87,12 +90,40 @@ public class ConvRDF {
 							.checking(checking)
 							.lang(lang)
 							.build();
-				} else return;
-
-				try{
-					parser_object.parse(inputStream);
+				} else if (reader.getClass() == XZCompressorInputStream.class) {
+					System.err.println("XZ.");
+					parser_object = RDFParserBuilder
+							.create()
+							.errorHandler(ErrorHandlerFactory.errorHandlerDetailed())
+							.source((XZCompressorInputStream) reader)
+							.checking(checking)
+							.lang(lang)
+							.build();
+				} else if (reader.getClass() == InputStreamReader.class) {
+/*
+					System.err.println("InputStreamReader." + lang);
+					BufferedReader br = null;
+					br = new BufferedReader((InputStreamReader)reader);
+					Iterator<String> itr = br.lines().iterator();
+					while(itr.hasNext()) {
+						StringReader sr = new StringReader(itr.next());
+						parser_object = RDFParserBuilder
+								.create()
+								.errorHandler(ErrorHandlerFactory.errorHandlerDetailed())
+								.source(sr)
+								.checking(checking)
+								.lang(lang)
+								.build();
+						parser_object.parse(inputStream);
+					}
+*/		
+				} else {
+					return;
 				}
-				catch (RiotParseException e){
+
+				try {
+					parser_object.parse(inputStream);
+				} catch (RiotParseException e){
 					String location = "";
 					if(e.getLine() >= 0 && e.getCol() >= 0)
 						location = " at the line: " + e.getLine() + " and the column: " + e.getCol();
@@ -103,11 +134,11 @@ public class ConvRDF {
 							+ "\", and cannot parse this file anymore. Reason: "
 							+ e.getMessage());
 					inputStream.finish();
-				}
-				catch (RiotNotFoundException e){
+				} catch (RiotNotFoundException e){
 					System.err.println("Format error for the file \"" + reader + "\": " + e.getMessage());
 					inputStream.finish();
 				}
+
 			}
 		};
 		executor.submit(parser);
@@ -159,7 +190,7 @@ public class ConvRDF {
 				procTar(is);
 			} else if (fext.equals("xz")) {
 				Lang lang = RDFLanguages.filenameToLang(fwoext);
-				issuer(new StringReader(CharStreams.toString(new InputStreamReader(is))), lang);
+				issuer(is, lang);
 			} else {
 				issuer(filename);
 			}
@@ -175,9 +206,11 @@ public class ConvRDF {
 			TarArchiveInputStream tarInput = new TarArchiveInputStream(ins);
 			TarArchiveEntry currentEntry;
 			while ((currentEntry = tarInput.getNextTarEntry()) != null) {
-				Lang lang = RDFLanguages.filenameToLang(currentEntry.getName());
+				String currentFile = currentEntry.getName();
+				Lang lang = RDFLanguages.filenameToLang(currentFile);
 				if(lang != null) {
-					System.err.println("Tar:" + currentEntry.getName());
+					System.err.println("Tar:" + currentFile);
+					//issuer(new InputStreamReader(tarInput), lang);
 					issuer(new StringReader(CharStreams.toString(new InputStreamReader(tarInput))), lang);
 				}
 			}
