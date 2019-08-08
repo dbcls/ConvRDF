@@ -33,8 +33,11 @@ import org.apache.jena.riot.lang.PipedRDFIterator;
 import org.apache.jena.riot.lang.PipedRDFStream;
 import org.apache.jena.riot.lang.PipedTriplesStream;
 import org.apache.jena.riot.system.ErrorHandlerFactory;
+import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.graph.Graph;
+import org.apache.jena.graph.Factory;
+import org.apache.jena.atlas.logging.LogCtl;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
@@ -42,9 +45,6 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.input.CloseShieldInputStream;
-import org.apache.jena.atlas.logging.LogCtl;
-import org.apache.jena.graph.Factory;
-import org.apache.jena.riot.RDFLanguages;
 
 public class ConvRDF {
 
