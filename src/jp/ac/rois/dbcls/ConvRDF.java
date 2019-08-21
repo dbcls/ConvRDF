@@ -55,8 +55,10 @@ public class ConvRDF {
 			Arrays.asList("String","StringReader","XZCompressorInputStream","CloseShieldInputStream"));
 
 	private static void issuer(String file) {
+		Lang lang = RDFLanguages.filenameToLang(file);
 		System.err.println("File:" + file);
-		issuer(file, null);
+		if(lang == null) return;
+		issuer(file, lang);
 	}
 
 	private static void issuer(Object reader, Lang lang) {
@@ -179,6 +181,9 @@ public class ConvRDF {
 			case "xz":
 				is = new XZCompressorInputStream(fis);
 				break;
+			case "":
+				fis.close();
+				return;
 			default:
 				fis.close();
 				issuer(filename);
@@ -225,6 +230,8 @@ public class ConvRDF {
 			if (f.isFile()) {
 				if(f.getName().endsWith(".taz")) {
 					procTar(new GzipCompressorInputStream(new FileInputStream(f.getPath())));
+				} else if (f.getName().startsWith(".")) {
+					continue;
 				} else {
 					dispatch(f.getPath());
 				}
@@ -263,6 +270,8 @@ public class ConvRDF {
 			if(file.isFile()){
 				if( file.getName().endsWith(".taz") ) {
 					procTar(new GzipCompressorInputStream(new FileInputStream(args[idx])));
+				} else if ( file.getName().startsWith(".") ) {
+					return;
 				} else {
 					dispatch(args[idx]);
 				}
