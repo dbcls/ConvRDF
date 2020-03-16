@@ -243,7 +243,14 @@ public class ConvRDF {
 			}
 		}
 	}
-	
+
+	private static void showHelp() {
+		System.out.println(
+				"java -jar ConvRDF.jar [-r|-c] <file(s) or directory(s) which contain files to be converted>\n" +
+				"  -r: recursively process directories. Default: not recursive.\n" + 
+				"  -c: enable RDF syntax cheking by Apache Jena (RDFParserBuilder). Default: disable.");
+	}
+
 	public static void main(String[] args) {
 
 		int idx = 0;
@@ -258,30 +265,33 @@ public class ConvRDF {
 			idx++;
 		}
 		if(idx == args.length){
-			System.out.println("Please specify the filename to be converted.");
+			System.out.println("Please specify filename(s) to be converted.\n");
+			showHelp();
 			return;
 		}
-		File file = new File(args[idx]);
-		if(!file.exists() || !file.canRead()){
-			System.out.println("Can't read " + file);
-			return;
-		}
-		try {
-			if(file.isFile()){
-				if( file.getName().endsWith(".taz") ) {
-					procTar(new GzipCompressorInputStream(new FileInputStream(args[idx])));
-				} else if ( file.getName().startsWith(".") ) {
-					return;
-				} else {
-					dispatch(args[idx]);
+		for(int this_idx=idx; idx<args.length; idx++) {
+			File file = new File(args[this_idx]);
+			if(!(file.exists() && file.canRead())){
+				System.out.println("Can't read " + file);
+				return;
+			}	
+			try {
+				if(file.isFile()){
+					if( file.getName().endsWith(".taz") ) {
+						procTar(new GzipCompressorInputStream(new FileInputStream(args[idx])));
+					} else if ( file.getName().startsWith(".") ) {
+						return;
+					} else {
+						dispatch(args[idx]);
+					}
+				} else if(file.isDirectory()){
+					processRecursively(file);
 				}
-			} else if(file.isDirectory()){
-				processRecursively(file);
+			} catch (FileNotFoundException e) {
+				System.err.println("File not found:" + e.getMessage());
+			} catch (IOException e) {
+				System.err.println("IO Exception:" + e.getMessage());
 			}
-		} catch (FileNotFoundException e) {
-			System.err.println("File not found:" + e.getMessage());
-		} catch (IOException e) {
-			System.err.println("IO Exception:" + e.getMessage());
 		}
 
 	}

@@ -8,7 +8,7 @@ This tool requires Apache Jena libraries. We tested it on the version 3.4.0.
 
 This tool can be used as follows:
 
-```$ java -jar ConvRDF.jar [-r|-c] <a file or a directory which contains files to be converted>```
+```$ java -jar ConvRDF.jar [-r|-c] <file(s) or directory(s) which contain files to be converted>```
 
 Compressed (.gz, .bz2, and .xz) files including .tar.gz can be processed properly.
 ### Options:
