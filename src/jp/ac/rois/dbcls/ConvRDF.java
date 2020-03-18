@@ -278,11 +278,11 @@ public class ConvRDF {
 			try {
 				if(file.isFile()){
 					if( file.getName().endsWith(".taz") ) {
-						procTar(new GzipCompressorInputStream(new FileInputStream(args[idx])));
+						procTar(new GzipCompressorInputStream(new FileInputStream(args[this_idx])));
 					} else if ( file.getName().startsWith(".") ) {
 						return;
 					} else {
-						dispatch(args[idx]);
+						dispatch(args[this_idx]);
 					}
 				} else if(file.isDirectory()){
 					processRecursively(file);
