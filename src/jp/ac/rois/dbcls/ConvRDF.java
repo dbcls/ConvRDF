@@ -269,7 +269,7 @@ public class ConvRDF {
 			showHelp();
 			return;
 		}
-		for(int this_idx=idx; idx<args.length; idx++) {
+		for(int this_idx=idx; idx<args.length; this_idx++) {
 			File file = new File(args[this_idx]);
 			if(!(file.exists() && file.canRead())){
 				System.out.println("Can't read " + file);
