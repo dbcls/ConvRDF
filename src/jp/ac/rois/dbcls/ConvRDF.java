@@ -274,7 +274,8 @@ public class ConvRDF {
 			if(!(file.exists() && file.canRead())){
 				System.out.println("Can't read " + file);
 				return;
-			}	
+			}
+			System.out.println("Reading:" + file);
 			try {
 				if(file.isFile()){
 					if( file.getName().endsWith(".taz") ) {
