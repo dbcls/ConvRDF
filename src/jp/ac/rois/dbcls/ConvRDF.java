@@ -52,7 +52,7 @@ public class ConvRDF {
 	static boolean recursive;
 	static boolean checking;
 	static final Set<String>types = new HashSet<String>(
-			Arrays.asList("String","StringReader","XZCompressorInputStream","CloseShieldInputStream"));
+			Arrays.asList("String","StringReader","XZCompressorInputStream","CloseShieldInputStream","GzipCompressorInputStream"));
 
 	private static void issuer(String file) {
 		Lang lang = RDFLanguages.filenameToLang(file);
@@ -120,6 +120,15 @@ public class ConvRDF {
 					.create()
 					.errorHandler(ErrorHandlerFactory.errorHandlerDetailed())
 					.source((CloseShieldInputStream) reader)
+					.checking(checking)
+					.lang(lang)
+					.build();
+					break;
+				case "GzipCompressorInputStream":
+					parser_object = RDFParserBuilder
+					.create()
+					.errorHandler(ErrorHandlerFactory.errorHandlerDetailed())
+					.source((GzipCompressorInputStream) reader)
 					.checking(checking)
 					.lang(lang)
 					.build();
@@ -218,11 +227,21 @@ public class ConvRDF {
 				if(lang != null) {
 					InputStream tarIns = new CloseShieldInputStream(tarInput);
 					String fext = FilenameUtils.getExtension(currentFile);
-					System.err.println("Tar (" + lang.toString() + "):" + currentFile);
-					if(fext == "gz" || fext == "bz2" || fext == "xz")
-						dispatch(currentFile);
-					else
+					System.err.println("Tar(" + lang.toString() + "):" + currentFile);
+					System.err.println("Extension:" + fext);
+					switch (fext) {
+					case "gz":
+						issuer(new GzipCompressorInputStream(tarIns), lang);
+						break;
+					case "bz2":
+						issuer(new BZip2CompressorInputStream(tarIns), lang);
+						break;
+					case "xz":
+						issuer(new XZCompressorInputStream(tarIns), lang);
+						break;
+					default:
 						issuer(tarIns, lang);
+					}
 				}
 			}
 			tarInput.close();
