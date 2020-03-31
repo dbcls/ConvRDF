@@ -62,7 +62,10 @@ public class ConvRDF {
 	}
 
 	private static void issuer(Object reader, Lang lang) {
-		if(reader.getClass() == StringReader.class && lang == null) return;
+		if(reader.getClass() == StringReader.class && lang == null) {
+			System.err.println("lang is null.");
+			return;
+		}
 
 		final String sn = reader.getClass().getSimpleName();
 		System.err.println(sn);
@@ -214,8 +217,12 @@ public class ConvRDF {
 				Lang lang = RDFLanguages.filenameToLang(currentFile);
 				if(lang != null) {
 					InputStream tarIns = new CloseShieldInputStream(tarInput);
-					System.err.println("Tar:" + currentFile);
-					issuer(tarIns, lang);
+					String fext = FilenameUtils.getExtension(currentFile);
+					System.err.println("Tar (" + lang.toString() + "):" + currentFile);
+					if(fext == "gz" || fext == "bz2" || fext == "xz")
+						dispatch(currentFile);
+					else
+						issuer(tarIns, lang);
 				}
 			}
 			tarInput.close();
@@ -273,7 +280,7 @@ public class ConvRDF {
 			File file = new File(args[this_idx]);
 			if(!(file.exists() && file.canRead())){
 				System.out.println("Can't read " + file);
-				return;
+				continue;
 			}
 			System.err.println("Reading:" + file);
 			try {
@@ -281,7 +288,7 @@ public class ConvRDF {
 					if( file.getName().endsWith(".taz") ) {
 						procTar(new GzipCompressorInputStream(new FileInputStream(args[this_idx])));
 					} else if ( file.getName().startsWith(".") ) {
-						return;
+						continue;
 					} else {
 						dispatch(args[this_idx]);
 					}
