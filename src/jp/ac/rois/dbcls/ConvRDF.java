@@ -12,8 +12,10 @@ package jp.ac.rois.dbcls;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -51,6 +53,7 @@ public class ConvRDF {
 	static { LogCtl.setCmdLogging(); }
 	static boolean recursive;
 	static boolean checking;
+	static OutputStream out;
 	static final Set<String>types = new HashSet<String>(
 			Arrays.asList("String","StringReader","XZCompressorInputStream","CloseShieldInputStream","GzipCompressorInputStream"));
 
@@ -164,12 +167,12 @@ public class ConvRDF {
 				g.add(next);
 				i++;
 				if(i % interval == 0){
-					RDFDataMgr.write(System.out, g, RDFFormat.NTRIPLES_UTF8);
+					RDFDataMgr.write(out, g, RDFFormat.NTRIPLES_UTF8);
 					g = Factory.createDefaultGraph();
 				}
 			}
 			if(i % interval > 0){
-				RDFDataMgr.write(System.out, g, RDFFormat.NTRIPLES_UTF8);
+				RDFDataMgr.write(out, g, RDFFormat.NTRIPLES_UTF8);
 			}
 		}
 		catch (RiotException e){
@@ -272,9 +275,10 @@ public class ConvRDF {
 
 	private static void showHelp() {
 		System.out.println(
-				"java -jar ConvRDF.jar [-r|-c] <file(s) or directory(s) which contain files to be converted>\n" +
+				"java -jar ConvRDF.jar [-r|-c|-o <output file>] <file(s) or directory(s) which contain files to be converted>\n" +
 				"  -r: recursively process directories. Default: not recursive.\n" + 
-				"  -c: enable RDF syntax cheking by Apache Jena (RDFParserBuilder). Default: disable.");
+				"  -c: enable RDF syntax cheking by Apache Jena (RDFParserBuilder). Default: disable.\n" +
+				"  -o <file>: filename for the output to be streamed to. Default: standard output.");
 	}
 
 	public static void main(String[] args) {
@@ -282,11 +286,20 @@ public class ConvRDF {
 		int idx = 0;
 		recursive = false;
 		checking = false;
+		out = System.out;
 		while (idx < args.length && args[idx].startsWith("-")) {
 			if(args[idx].equals("-r")) {
 				recursive = true;
 			} else if(args[idx].equals("-c")) {
 				checking = true;
+			} else if(args[idx].equals("-o")) {
+				idx++;
+				try{
+					out = new FileOutputStream(args[idx]);
+				}
+				catch(FileNotFoundException e){
+					System.err.println("File not found:" + e.getMessage());
+				}
 			}
 			idx++;
 		}
