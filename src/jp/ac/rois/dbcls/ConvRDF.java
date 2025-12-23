@@ -48,6 +48,7 @@ import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.input.CloseShieldInputStream;
 
+@SuppressWarnings("deprecation")
 public class ConvRDF {
 
 	static { LogCtl.setCmdLogging(); }
