@@ -9,6 +9,7 @@
 
 package jp.ac.rois.dbcls;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -16,6 +17,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -282,7 +284,7 @@ public class ConvRDF {
 				"  -o <file>: filename for the output to be streamed to. Default: standard output.");
 	}
 
-	public static void main(String[] args) {
+    public static void main(String[] args) {
 
 		int idx = 0;
 		recursive = false;
