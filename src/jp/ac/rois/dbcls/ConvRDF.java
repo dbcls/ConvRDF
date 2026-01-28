@@ -9,7 +9,6 @@
 
 package jp.ac.rois.dbcls;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -17,13 +16,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.zip.GZIPOutputStream;
 
 import org.apache.jena.riot.RDFParser;
 import org.apache.jena.riot.RDFParserBuilder;
@@ -47,6 +46,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
+import org.apache.commons.compress.compressors.xz.XZCompressorOutputStream;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.input.CloseShieldInputStream;
 
@@ -285,7 +285,6 @@ public class ConvRDF {
 	}
 
     public static void main(String[] args) {
-
 		int idx = 0;
 		recursive = false;
 		checking = false;
@@ -297,12 +296,19 @@ public class ConvRDF {
 				checking = true;
 			} else if(args[idx].equals("-o")) {
 				idx++;
-				try{
-					out = new FileOutputStream(args[idx]);
-				}
-				catch(FileNotFoundException e){
-					System.err.println("File not found:" + e.getMessage());
-				}
+			    try {
+			        OutputStream fos = new FileOutputStream(args[idx]);
+
+			        if (args[idx].endsWith(".gz")) {
+			            fos = new GZIPOutputStream(fos);
+			        } else if (args[idx].endsWith(".xz")) {
+			            fos = new XZCompressorOutputStream(fos);
+			        }
+
+			        out = fos;
+			    } catch (IOException e) {
+			        System.err.println("File error: " + e.getMessage());
+			    }
 			}
 			idx++;
 		}
