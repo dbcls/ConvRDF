@@ -33,9 +33,13 @@ import org.apache.jena.riot.RDFFormat;
 import org.apache.jena.riot.RiotNotFoundException;
 import org.apache.jena.riot.RiotParseException;
 import org.apache.jena.riot.lang.PipedRDFIterator;
-import org.apache.jena.riot.lang.PipedRDFStream;
 import org.apache.jena.riot.lang.PipedTriplesStream;
+import org.apache.jena.riot.lang.PipedQuadsStream;
 import org.apache.jena.riot.system.ErrorHandlerFactory;
+import org.apache.jena.riot.system.StreamRDF;
+import org.apache.jena.sparql.core.DatasetGraph;
+import org.apache.jena.sparql.core.DatasetGraphFactory;
+import org.apache.jena.sparql.core.Quad;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.graph.Graph;
@@ -64,6 +68,7 @@ public class ConvRDF {
 		Lang lang = RDFLanguages.filenameToLang(file);
 		System.err.println("File:" + file);
 		if(lang == null) return;
+		System.err.println(lang);
 		issuer(file, lang);
 	}
 
@@ -84,9 +89,17 @@ public class ConvRDF {
 		final int buffersize = 100000;
 		final int pollTimeout = 300; // Poll timeout in milliseconds
 		final int maxPolls = 1000;   // Max poll attempts
+		PipedRDFIterator<Triple> tripleIter = null;
+		PipedRDFIterator<Quad> quadIter = null;
+		StreamRDF inputStream;
 
-		PipedRDFIterator<Triple> iter = new PipedRDFIterator<Triple>(buffersize, false, pollTimeout, maxPolls);
-		final PipedRDFStream<Triple> inputStream = new PipedTriplesStream(iter);
+		if(RDFLanguages.isQuads(lang)) {
+			quadIter = new PipedRDFIterator<>(buffersize, false, pollTimeout, maxPolls);
+			inputStream = new PipedQuadsStream(quadIter);
+		}else {
+			tripleIter = new PipedRDFIterator<>(buffersize, false, pollTimeout, maxPolls);
+			inputStream = new PipedTriplesStream(tripleIter);
+		}
 
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -163,19 +176,35 @@ public class ConvRDF {
 		executor.submit(parser);
 
 		int i = 0;
-		Graph g = Factory.createDefaultGraph();
 		try{
-			while (iter.hasNext()) {
-				Triple next = iter.next();
-				g.add(next);
-				i++;
-				if(i % interval == 0){
-					RDFDataMgr.write(out, g, RDFFormat.NTRIPLES_UTF8);
-					g = Factory.createDefaultGraph();
+			if (quadIter != null) {
+				DatasetGraph dsg = DatasetGraphFactory.create();
+				while (quadIter.hasNext()) {
+					Quad next = quadIter.next();
+					dsg.add(next);
+					i++;
+					if(i % interval == 0){
+						RDFDataMgr.write(out, dsg, RDFFormat.NQUADS_UTF8);
+						dsg = DatasetGraphFactory.create();
+					}
 				}
-			}
-			if(i % interval > 0){
-				RDFDataMgr.write(out, g, RDFFormat.NTRIPLES_UTF8);
+				if(i % interval > 0){
+					RDFDataMgr.write(out, dsg, RDFFormat.NQUADS_UTF8);
+				}
+			}else {
+				Graph g = Factory.createDefaultGraph();
+				while (tripleIter.hasNext()) {
+					Triple next = tripleIter.next();
+					g.add(next);
+					i++;
+					if(i % interval == 0){
+						RDFDataMgr.write(out, g, RDFFormat.NTRIPLES_UTF8);
+						g = Factory.createDefaultGraph();
+					}
+				}
+				if(i % interval > 0){
+					RDFDataMgr.write(out, g, RDFFormat.NTRIPLES_UTF8);
+				}
 			}
 		}
 		catch (RiotException e){
@@ -281,7 +310,7 @@ public class ConvRDF {
 				"java -jar ConvRDF.jar [-r|-c|-o <output file>] <file(s) or directory(s) which contain files to be converted>\n" +
 				"  -r: recursively process directories. Default: not recursive.\n" + 
 				"  -c: enable RDF syntax cheking by Apache Jena (RDFParserBuilder). Default: disable.\n" +
-				"  -o <file>: filename for the output to be streamed to. Default: standard output.");
+				"  -o <file>: filename of the output (ending with '.gz' or '.xz' is recognized as such). Default w/o this option: standard output.");
 	}
 
     public static void main(String[] args) {
