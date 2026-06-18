@@ -167,9 +167,11 @@ public class ConvRDF {
 							+ "\", and cannot parse this file anymore. Reason: "
 							+ e.getMessage());
 					inputStream.finish();
+					System.exit(1);
 				} catch (RiotNotFoundException e){
 					System.err.println("Format error for the file \"" + reader + "\": " + e.getMessage());
 					inputStream.finish();
+					System.exit(1);
 				}
 
 			}
@@ -210,6 +212,7 @@ public class ConvRDF {
 		}
 		catch (RiotException e){
 			System.err.println("Riot Exception: " + e.getMessage());
+			System.exit(1);
 		}
 		executor.shutdown();
 	}
@@ -248,8 +251,10 @@ public class ConvRDF {
 			}
 		} catch (FileNotFoundException e) {
 			System.err.println("File not found:" + e.getMessage());
+			System.exit(1);
 		} catch (IOException e) {
 			System.err.println("IO Exception:" + e.getMessage());
+			System.exit(1);
 		}
 	}
 
@@ -283,6 +288,7 @@ public class ConvRDF {
 			tarInput.close();
 		} catch (IOException e) {
 			System.err.println("Something wrong in processing a tar file:" + e.getMessage());
+			System.exit(1);
 		}
 	}
 
@@ -340,6 +346,7 @@ public class ConvRDF {
 			        out = fos;
 			    } catch (IOException e) {
 			        System.err.println("File error: " + e.getMessage());
+			        System.exit(1);
 			    }
 			}
 			idx++;
@@ -347,7 +354,7 @@ public class ConvRDF {
 		if(idx == args.length){
 			System.out.println("Please specify filename(s) to be converted.\n");
 			showHelp();
-			return;
+			System.exit(1);
 		}
 		for(int this_idx = idx; this_idx < args.length; this_idx++) {
 			File file = new File(args[this_idx]);
@@ -370,11 +377,13 @@ public class ConvRDF {
 				}
 			} catch (FileNotFoundException e) {
 				System.err.println("File not found:" + e.getMessage());
+				System.exit(1);
 			} catch (IOException e) {
 				System.err.println("IO Exception:" + e.getMessage());
+				System.exit(1);
 			}
 		}
-
+        System.exit(0);
 	}
 
 }
